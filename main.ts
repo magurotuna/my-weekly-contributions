@@ -1,11 +1,5 @@
-import { config as dotenvConfig } from "https://deno.land/x/dotenv/mod.ts";
-import {
-  startOfToday,
-  addDays,
-  subDays,
-  formatISO,
-  parse,
-} from "https://deno.land/x/date_fns/index.js";
+import { dotenvConfig } from "./deps.ts";
+import { startOfToday, addDays, subDays, formatISO, parse } from "./deps.ts";
 import type { Response, Config } from "./types.ts";
 
 function readDate(): Date {
