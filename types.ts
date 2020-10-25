@@ -7,6 +7,9 @@ export type Response = {
             name: string;
             isPrivate: boolean;
             url: string;
+            owner: {
+              login: string;
+            };
           };
           contributions: {
             totalCount: number;

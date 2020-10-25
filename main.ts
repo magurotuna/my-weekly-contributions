@@ -27,6 +27,7 @@ function load_config(): Config {
 function buildQuery(startDate: Date, checkDays: number = 7): string {
   const start = formatISO(startDate);
   const end = formatISO(addDays(startDate, checkDays));
+  console.error({ start, end });
   return `
 {
   "query": "query {
@@ -36,7 +37,10 @@ function buildQuery(startDate: Date, checkDays: number = 7): string {
           repository {
             name,
             isPrivate,
-            url
+            url,
+            owner {
+              login
+            }
           },
           contributions(first: 100) {
             totalCount,
@@ -75,7 +79,9 @@ function print(resp: Response) {
   );
 
   for (const con of contributions) {
-    console.log(`# [${con.repository.name}](${con.repository.url})\n`);
+    console.log(
+      `# [${con.repository.owner.login}/${con.repository.name}](${con.repository.url})\n`
+    );
 
     for (const { pullRequest } of con.contributions.nodes) {
       console.log(`- [${pullRequest.title}](${pullRequest.permalink})`);
