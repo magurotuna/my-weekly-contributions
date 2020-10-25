@@ -2,12 +2,17 @@ import { config as dotenvConfig } from "https://deno.land/x/dotenv/mod.ts";
 import {
   startOfToday,
   addDays,
+  subDays,
   formatISO,
+  parse,
 } from "https://deno.land/x/date_fns/index.js";
+import type { Response, Config } from "./types.ts";
 
-type Config = {
-  token: string;
-};
+function readDate(): Date {
+  return Deno.args.length > 0
+    ? parse(Deno.args[0], "yyyyMMdd", startOfToday())
+    : subDays(startOfToday(), 7);
+}
 
 function load_config(): Config {
   const env = dotenvConfig();
@@ -23,33 +28,51 @@ function buildQuery(startDate: Date, checkDays: number = 7): string {
   const start = formatISO(startDate);
   const end = formatISO(addDays(startDate, checkDays));
   return `
-query {
-  viewer {
-    contributionsCollection(from: "${start}", to: "${end}") {
-      pullRequestContributionsByRepository {
-        repository {
-          name,
-          isPrivate
-        },
-        contributions(first: 255) {
-          totalCount,
-          nodes {
-            pullRequest {
-              title,
-              permalink
+{
+  "query": "query {
+    viewer {
+      contributionsCollection(from: \\"${start}\\", to: \\"${end}\\") {
+        pullRequestContributionsByRepository {
+          repository {
+            name,
+            isPrivate,
+            url
+          },
+          contributions(first: 100) {
+            totalCount,
+            nodes {
+              pullRequest {
+                title,
+                permalink
+              }
             }
           }
         }
       }
     }
-  }
-}`;
+  }"
+}
+  `.replace(/\n/g, " ");
+}
+
+async function fetchGitHub(query: string, config: Config): Promise<Response> {
+  const response = await fetch("https://api.github.com/graphql", {
+    method: "POST",
+    headers: {
+      authorization: `bearer ${config.token}`,
+    },
+    body: query,
+  }).then((res) => res.json());
+  return response as Response;
 }
 
 async function main() {
+  const startDate = readDate();
   const config = load_config();
-  const query = buildQuery(startOfToday());
-  console.log(query);
+  const query = buildQuery(startDate);
+  const resp = await fetchGitHub(query, config);
+
+  console.log(JSON.stringify(resp, null, 2));
 }
 
 await main();
