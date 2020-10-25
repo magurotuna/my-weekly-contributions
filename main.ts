@@ -66,13 +66,31 @@ async function fetchGitHub(query: string, config: Config): Promise<Response> {
   return response as Response;
 }
 
+function print(resp: Response) {
+  const contributions = resp.data.viewer.contributionsCollection.pullRequestContributionsByRepository.filter(
+    (c) => !c.repository.isPrivate && c.repository.name !== "maguro.dev"
+  );
+  contributions.sort(
+    (a, b) => b.contributions.totalCount - a.contributions.totalCount
+  );
+
+  for (const con of contributions) {
+    console.log(`# [${con.repository.name}](${con.repository.url})\n`);
+
+    for (const { pullRequest } of con.contributions.nodes) {
+      console.log(`- [${pullRequest.title}](${pullRequest.permalink})`);
+      console.log("  - <ADD DESCRIPTION!>");
+    }
+    console.log("\n");
+  }
+}
+
 async function main() {
   const startDate = readDate();
   const config = load_config();
   const query = buildQuery(startDate);
   const resp = await fetchGitHub(query, config);
-
-  console.log(JSON.stringify(resp, null, 2));
+  print(resp);
 }
 
 await main();
