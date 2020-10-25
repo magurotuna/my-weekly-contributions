@@ -1,6 +1,6 @@
 import { dotenvConfig } from "./deps.ts";
-import { startOfToday, addDays, subDays, formatISO, parse } from "./deps.ts";
-import type { Response, Config } from "./types.ts";
+import { addDays, formatISO, parse, startOfToday, subDays } from "./deps.ts";
+import type { Config, Response } from "./types.ts";
 
 function readDate(): Date {
   return Deno.args.length > 0
@@ -18,7 +18,7 @@ function load_config(): Config {
   throw new Error("TOKEN is not set");
 }
 
-function buildQuery(startDate: Date, checkDays: number = 7): string {
+function buildQuery(startDate: Date, checkDays = 7): string {
   const start = formatISO(startDate);
   const end = formatISO(addDays(startDate, checkDays));
   console.error({ start, end });
@@ -65,16 +65,17 @@ async function fetchGitHub(query: string, config: Config): Promise<Response> {
 }
 
 function print(resp: Response) {
-  const contributions = resp.data.viewer.contributionsCollection.pullRequestContributionsByRepository.filter(
-    (c) => !c.repository.isPrivate && c.repository.name !== "maguro.dev"
-  );
+  const contributions = resp.data.viewer.contributionsCollection
+    .pullRequestContributionsByRepository.filter(
+      (c) => !c.repository.isPrivate && c.repository.name !== "maguro.dev",
+    );
   contributions.sort(
-    (a, b) => b.contributions.totalCount - a.contributions.totalCount
+    (a, b) => b.contributions.totalCount - a.contributions.totalCount,
   );
 
   for (const con of contributions) {
     console.log(
-      `# [${con.repository.owner.login}/${con.repository.name}](${con.repository.url})\n`
+      `# [${con.repository.owner.login}/${con.repository.name}](${con.repository.url})\n`,
     );
 
     for (const { pullRequest } of con.contributions.nodes) {
