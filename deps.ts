@@ -1,4 +1,5 @@
 export { config as dotenvConfig } from "https://deno.land/x/dotenv/mod.ts";
+// @deno-types="https://unpkg.com/date-fns@2.15.0/typings.d.ts"
 export {
   addDays,
   formatISO,
